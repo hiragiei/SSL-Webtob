@@ -1,7 +1,7 @@
 ---
 - name: Webtob SSL Batch
   gather_facts: no
-  hosts: apache
+  hosts: Apache
   serial: 1
 
   roles:
