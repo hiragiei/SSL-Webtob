@@ -5,24 +5,24 @@
    path: "{{ host_ssl_path }}"
    dest: "{{ host_ssl_path }}{{new_expire_year }}.tgz"
 
-- name: 2.새 인증서 복사 Copy new SSL {{ new_ssl_path }} to {{ host_ssl_path }}
+- name: 2.새 인증서 복사(Copy new SSL {{ new_ssl_path }} to {{ host_ssl_path }})
   copy:
    src: "{{ new_ssl_path }}"
    dest: "{{ host_ssl_path }}"
   register: myoutput
 
-- name: 3. WebtoB 종료
+- name: 3. WebtoB 종료(Shutting down WebtoB)
   environment:
     WEBTOBDIR: /APP/webtob
   command: /APP/webtob/bin/wsdown -i
 
-- name: 4. Webtob 기동 Starting up WebtoB
+- name: 4. Webtob 기동(Starting up WebtoB)
   environment:
    WEBTOBDIR: /APP/webtob
    LD_LIBRARY_PATH: /APP/webtob/lib
   command: /APP/webtob/bin/wsboot
 
-- name: Wait for cluster health to return to yellow or green
+- name: 5. mis/Index.html 파일 확인 중
   uri:
    url: "https://{{ ansible_host }}:{{ http_port }}/mis/index.html"
    method: GET
@@ -32,7 +32,7 @@
   retries: 10
   delay: 10
 
-- name: Get a cert from an https port {{ ansible_host }}
+- name: 6. {{ ansible_host }}에서 SSL 인증서 유효기간 확인 
   community.crypto.get_certificate:
     host: "{{ ansible_host }}"
     port: "{{ http_port }}"
@@ -42,12 +42,12 @@
   become_user: root
   register: cert
 
-- name: Check SSL Deploy Success
+- name: 7. SSL 인증서 성공 확인
   debug:
-   msg: SSL Deploy Success on {{ansible_host}}
+   msg: {{ansible_host}}에서 SSL 인증서 교체 성공
   when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year == new_expire_year
 
 - name: Threw Fail Deploy
   fail:
-   msg: SSL Deploy Fail on {{ansible_host}} Cause Expire in {{ ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) }}
+   msg: {{ansible_host}}에서 인증서 교체 실패 {{ ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) }}
   when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year !=   new_expire_year
