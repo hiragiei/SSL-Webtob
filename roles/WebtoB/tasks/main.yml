@@ -1,43 +1,22 @@
 ---
-- name: Copy SSL in {{ new_ssl_path }} to {{ host_ssl_path }}
+
+- name: 1.기존 인증서 백업  {{new_expire_year }}.tgz
+  archive:
+   path: "{{ host_ssl_path }}"
+   dest: "{{ host_ssl_path }}{{new_expire_year }}.tgz"
+
+- name: 2.새 인증서 복사 Copy new SSL {{ new_ssl_path }} to {{ host_ssl_path }}
   copy:
    src: "{{ new_ssl_path }}"
    dest: "{{ host_ssl_path }}"
   register: myoutput
 
-- name: Show host's ip
-  debug:
-   msg: "{{ http_port }}"
-
-
-- name: Get a cert from an https port 
-  community.crypto.get_certificate:
-    host: "192.1.12.64"
-    port: "{{ http_port }}"
-  run_once: true
-  delegate_to: localhost
-  become: true
-  become_user: root
-  register: cert
-
-
-#- name: Get a cert from an https port
-#  community.crypto.get_certificate:
-#    host: "www.google.com"
-#    port: 443
-#  delegate_to: localhost
-#  run_once: true
-#  register: cert
-#  become: true
-#  become_user: root
-
-
-- name: Shutting Down WebtoB
+- name: 3. WebtoB 종료
   environment:
     WEBTOBDIR: /APP/webtob
   command: /APP/webtob/bin/wsdown -i
 
-- name: Starting up WebtoB
+- name: 4. Webtob 기동 Starting up WebtoB
   environment:
    WEBTOBDIR: /APP/webtob
    LD_LIBRARY_PATH: /APP/webtob/lib
@@ -45,7 +24,7 @@
 
 - name: Wait for cluster health to return to yellow or green
   uri:
-   url: "https://{{ ansible_ssh_host }}:{{ http_port }}/mis/index.html"
+   url: "https://{{ ansible_host }}:{{ http_port }}/mis/index.html"
    method: GET
    validate_certs: no
   register: response
@@ -53,15 +32,22 @@
   retries: 10
   delay: 10
 
+- name: Get a cert from an https port {{ ansible_host }}
+  community.crypto.get_certificate:
+    host: "{{ ansible_host }}"
+    port: "{{ http_port }}"
+  run_once: true
+  delegate_to: localhost
+  become: true
+  become_user: root
+  register: cert
+
 - name: Check SSL Deploy Success
   debug:
    msg: SSL Deploy Success on {{ansible_host}}
-  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year == new_expire_year 
+  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year == new_expire_year
 
 - name: Threw Fail Deploy
   fail:
    msg: SSL Deploy Fail on {{ansible_host}} Cause Expire in {{ ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) }}
-  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year !=   new_expire_year 
-
-#- name: debug response
-#  debug: var=response
+  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year !=   new_expire_year

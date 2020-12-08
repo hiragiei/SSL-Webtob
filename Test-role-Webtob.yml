@@ -1,6 +1,6 @@
 ---
 - name: Webtob SSL Batch
-  gather_facts: yes
+  gather_facts: no
   hosts: testwebtob
   serial: 1
 
