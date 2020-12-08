@@ -1,0 +1,11 @@
+---
+- name: Webtob SSL Batch
+  gather_facts: no
+  hosts: apache
+  serial: 1
+
+  roles:
+  - role: Apache
+    become: yes
+    become_user: root
+    become_method: su

@@ -1,5 +1,9 @@
 ---
 
+- name: 0.Debug Variable
+  debug :
+   msg : "{{ uri }}"
+
 - name: 1.기존 인증서 백업  {{new_expire_year }}.tgz
   archive:
    path: "{{ host_ssl_path }}"
@@ -11,20 +15,14 @@
    dest: "{{ host_ssl_path }}"
   register: myoutput
 
-- name: 3. WebtoB 종료(Shutting down WebtoB)
-  environment:
-    WEBTOBDIR: /APP/webtob
-  command: /APP/webtob/bin/wsdown -i
+- name: 3. Apache 재기동(Restart Apache)
+  service:
+   name: httpd
+   state: restarted
 
-- name: 4. Webtob 기동(Starting up WebtoB)
-  environment:
-   WEBTOBDIR: /APP/webtob
-   LD_LIBRARY_PATH: /APP/webtob/lib
-  command: /APP/webtob/bin/wsboot
-
-- name: 5. mis/Index.html 파일 확인 중
+- name: 5. Index.html 파일 확인 중
   uri:
-   url: "https://{{ ansible_host }}:{{ http_port }}/mis/index.html"
+   url: "https://{{ ansible_host }}:{{ http_port }}{{ uri }}"
    method: GET
    validate_certs: no
   register: response

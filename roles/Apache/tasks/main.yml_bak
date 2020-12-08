@@ -1,0 +1,35 @@
+---
+- name: Webtob SSL
+  gather_facts: no
+  become: yes
+  become_user: webtob
+  become_method: su
+
+  tasks:
+  - name: connect to webtob by ssh
+    shell: touch test.txt
+    args:
+     chdir: /APP/webtob
+    register: myoutput
+  - name: Copy SSL to Node
+    copy:
+     src: /etc/ansible/valult/ssl/webtob/ssl_testfile.tmp
+     dest: /APP/webtob/tmp/ssl_testfile.tmp
+    register: myoutput
+  - name: Shutting Down WebtoB
+    environment:
+     WEBTOBDIR: /APP/webtob
+    command: /APP/webtob/bin/wsdown
+  - name: Starting up WebtoB
+    environment:
+     WEBTOBDIR: /APP/webtob
+     LD_LIBRARY_PATH: /APP/webtob/lib
+    command: /APP/webtob/bin/wsboot
+  - name: Wait for cluster health to return to yellow or green
+    uri:
+     url: "http://localhost"
+     method: GET
+    register: response
+    until: "response.status == 403"
+    retries: 10
+    delay: 30
