@@ -53,15 +53,15 @@
   retries: 10
   delay: 10
 
-#- name: Check SSL Deploy Success
-#  debug:
-#   msg: SSL Deploy Success on {{ansible_host}}
-#  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year == new_expire_year 
+- name: Check SSL Deploy Success
+  debug:
+   msg: SSL Deploy Success on {{ansible_host}}
+  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year == new_expire_year 
 
-#- name: Threw Fail Deploy
-#  fail:
-#   msg: SSL Deploy Fail on {{ansible_host}} Cause Expire in {{ ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) }}
-#  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year !=   new_expire_year 
+- name: Threw Fail Deploy
+  fail:
+   msg: SSL Deploy Fail on {{ansible_host}} Cause Expire in {{ ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')) }}
+  when: ( cert.not_after | to_datetime('%Y%m%d%H%M%SZ')).year !=   new_expire_year 
 
 #- name: debug response
 #  debug: var=response
