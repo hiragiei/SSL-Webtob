@@ -1,0 +1,5 @@
+---
+collections:
+  - name: https://github.com/jjaswanson4/install_satellite.git
+    type: git
+    version: master

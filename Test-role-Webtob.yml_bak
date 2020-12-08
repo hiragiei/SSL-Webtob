@@ -1,0 +1,11 @@
+---
+- name: Webtob SSL Batch
+  gather_facts: yes
+  hosts: testwebtob
+  serial: 1
+
+  roles:
+  - role: ../roles/ssl/WebtoB
+    become: yes
+    become_user: webtob
+    become_method: su
